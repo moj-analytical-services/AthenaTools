@@ -1,0 +1,22 @@
+
+[tool.poetry]
+name = "AthenaTools"
+version = "0.0.1"
+description = "set of useful Athena db creation tools"
+authors = ["stephen bias <stephen.bias@digital.justice.gov.uk>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.9"
+awswrangler = ">=2.7.0"
+pydbtools = "^3.1.0"
+mojap-metadata = "^1.2.1"
+pyarrow = "^3.0.0"
+arrow-pd-parser = "^0.4.4"
+dataengineeringutils3 = "^1.2.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
