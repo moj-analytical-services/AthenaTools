@@ -1,8 +1,8 @@
 # A set of useful functions for making and manipulating Athena databases
 
 ### Instalation and Requirments
-You must have python >= 3.8, all other requirements can be the `pyptoject.toml`
-currently, the package must be installed from GitHub, this can be done with the following command:
+You must have python >= 3.8, all other requirements can be the `pyptoject.toml`.
+Currently, the package must be installed from GitHub, this can be done with the following command:
 `pip install git+https://github.com/moj-analytical-services/AthenaTools.git`
 
 ## Creating a single table
@@ -92,10 +92,11 @@ from AthenaTools.AthenaTools import Athena, AthenaDatabase
 
 MyAthena = Athena()
 MyAthena.add_db("my_db_1")
-MyAthena.add_db("my_db_2")
+
+MyDb2 = AthenaDatabase(db_name="my_db_2", db_base_path = "s3://alpha-bucket/db_2/")
+MyAthena.add_db(MyDb2)
 
 MyAthena.my_db_1.db_base_path = "s3://alpha-bucket/db_1/"
-MyAthena.my_db_2.db_base_path = "s3://alpha-bucket/db_2/"
 ```
 Interaction with the `my_db_1` and `my_db_2` objects is the same as above as they are
 `AthenaDatabase` objects. To create all tables, delete all tables (data or schemas only) from
