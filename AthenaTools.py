@@ -115,7 +115,7 @@ def _delete_glue_table(db_name: str, table_name: str):
     try:
         glue_client.delete_table(DatabaseName=db_name, Name=table_name)
     except Exception:
-        pass
+        _logger.info(f"table {db_name}.{table_name} already exists")
 
 
 def _generate_boto_dict(
