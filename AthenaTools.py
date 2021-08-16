@@ -9,7 +9,7 @@ import pydbtools as pydb
 
 from collections import Counter
 from copy import deepcopy
-from typing import Union, List, Any
+from typing import Tuple, Union, List, Any
 from mojap_metadata.converters.arrow_converter import ArrowConverter
 from mojap_metadata.converters.glue_converter import (
     GlueConverter,
@@ -111,11 +111,7 @@ def _are_required_attrs_set(attr_dict: dict):
 
 
 def _delete_glue_table(db_name: str, table_name: str):
-    glue_client = boto3.client("glue")
-    try:
-        glue_client.delete_table(DatabaseName=db_name, Name=table_name)
-    except Exception:
-        _logger.info(f"table {db_name}.{table_name} already exists")
+    wr.catalog.delete_table_if_exists(database=db_name, table=table_name)
 
 
 def _generate_boto_dict(
@@ -661,7 +657,9 @@ class AthenaTable:
 
         self._table_has_been_made = True
 
+    # FIX FFIX FIXFIWEFWE
     def nuke(self):
+        # FIX: broken s3 path, because of the database_folder_name (may already be set)
         # deletes everything, data and glue tables
         if not _are_required_attrs_set(
             {
@@ -912,6 +910,10 @@ class AthenaTable:
         # turn it into mojap-metadata object and set the metadata
         ac = ArrowConverter()
         self.table_metadata = ac.generate_to_meta(arrow_schema)
+        # table_metadata sets this to true, but this wasn't user specified! 
+        self._user_has_specified_meta = False
+        # set the partitions if required
+        self._set_partitions_if_required()
         _logger.info("metadata and partitions sucessfully merged")
 
     def _get_out_path(self):
@@ -967,7 +969,7 @@ class AthenaTable:
             mode=self.write_mode,
         )
 
-        if self._user_has_specified_meta:
+        if self.table_metadata is not None:
             _delete_glue_table(self.db_name, self.table_name)
             self.table_metadata.file_format = "parquet"
             boto_dict = _generate_boto_dict(
@@ -984,7 +986,8 @@ class AthenaTable:
 
         if ff.lower().endswith("csv"):
             read_file_func = pa_read_csv_to_pandas
-        elif ff.lower().endswith("json"):
+        # should be just jsonl I think
+        elif ff.lower().endswith("json") or ff.lower().endswith("jsonl"):
             read_file_func = pa_read_json_to_pandas
         elif ff.lower().endswith("parquet"):
             read_file_func = pa_read_parquet_to_pandas
@@ -1012,6 +1015,8 @@ class AthenaTable:
     def db_name(self):
         return self._db_name
 
+    # ADD: if db_name and table_name are set, collect existing information and populate it! 
+    # I also think ditch the /database thing.
     @db_name.setter
     def db_name(self, db_name: str):
         self._db_name = _db_name_setter(
