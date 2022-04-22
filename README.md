@@ -9,7 +9,7 @@ Currently, the package must be installed from GitHub, this can be done with the 
 
 to create a single table (or single table object):
 ```python
-from AthenaTools.AthenaTools import AthenaTable
+from athena_tools import AthenaTable
 
 MyTable =  AthenaTable()
 
@@ -21,7 +21,7 @@ MyTable.data_path = "s3://alpha-bucket/data/file.csv"
 ```
 optionally, these can also be set as key-word arguments (or a mix of the two)
 ```python
-from AthenaTools.AthenaTools import AthenaTable
+from athena_tools import AthenaTable
 
 MyTable = AthenaTable(table_name="my_table", db_name="my_db")
 MyTable.db_base_path = "s3://alpha-bucket/folder/"
@@ -53,7 +53,7 @@ We will add two tables to the `AthenaDatabase` object with two methods, first by
 and second by creating a table from the `AthenaDatabase`'s attributes
 
 ```python
-from AthenaTools.AthenaTools import AthenaDatabase, AthenaTable
+from athena_tools import AthenaDatabase, AthenaTable
 
 MyTable = AthenaTable(table_name="my_table_1", db_name="my_db")
 MyTable.db_base_path = "s3://alpha-bucket/folder/"
@@ -88,7 +88,7 @@ MyDb.my_table_1.delete_table()
 You can also manage many database objects from the `Athena` object
 
 ```python
-from AthenaTools.AthenaTools import Athena, AthenaDatabase
+from athena_tools import Athena, AthenaDatabase
 
 MyAthena = Athena()
 MyAthena.add_db("my_db_1")
