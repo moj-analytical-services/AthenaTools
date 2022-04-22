@@ -15,19 +15,12 @@ from mojap_metadata.converters.glue_converter import (
     GlueConverter,
     _default_type_converter,
 )
-from pyarrow import(
-    fs,
-    Schema,
-)
+from pyarrow import Schema
 from mojap_metadata.metadata.metadata import (
     Metadata, 
     _get_type_category_pattern_dict_from_schema
 )
-from arrow_pd_parser.parse import(
-    pa_read_csv_to_pandas, 
-    pa_read_json_to_pandas,
-    pa_read_parquet_to_pandas,
-)
+from arrow_pd_parser import reader
 from dataengineeringutils3.s3 import(
     get_filepaths_from_s3_folder,
     delete_s3_folder_contents,
@@ -65,7 +58,10 @@ def _logging_setup() -> logging.Logger:
 
 
 def _warn_on_change(
-    warn_msg: str, new: Union[str, None], old: Union[str, None], has_been_made=False
+    warn_msg: str,
+    new: Union[str, None],
+    old: Union[str, None],
+    has_been_made: bool=False
 ):
     if old is not None and new != old:
         _logger.info(warn_msg)
@@ -939,7 +935,7 @@ class AthenaTable:
         if self.partition_data:
             for partition in self.partitions:
                 out_path = os.path.join(out_path, f"{partition['name']}={partition['value']}")
-        out_path = os.path.join(out_path, f"{fn}.parquet")
+        out_path = os.path.join(out_path, f"{fn}.snappy.parquet")
         return out_path
 
     def _copy_data_to_database_location(self):
@@ -978,37 +974,14 @@ class AthenaTable:
             glue_client = boto3.client("glue")
             glue_client.create_table(**boto_dict)
 
-        pydb.read_sql_query(f"msck repair table {self.db_name}.{self.table_name}")
-
-    def _read_data_into_memory(self):
-        fp, fn = os.path.split(self.data_path)
-        fn, ff = os.path.splitext(fn)
-
-        if ff.lower().endswith("csv"):
-            read_file_func = pa_read_csv_to_pandas
-        # should be just jsonl I think
-        elif ff.lower().endswith("json") or ff.lower().endswith("jsonl"):
-            read_file_func = pa_read_json_to_pandas
-        elif ff.lower().endswith("parquet"):
-            read_file_func = pa_read_parquet_to_pandas
-        else:
-            raise TypeError(
-                f"unsupported file type as input data \"{ff}\" for file {fn}{ff}"
+        if self.partition_data:
+            pydb.start_query_execution_and_wait(
+                f"msck repair table {self.db_name}.{self.table_name}"
             )
 
-        file_sys, _ = fs.FileSystem.from_uri(self.data_path)
-        with file_sys.open_input_stream(
-            self.data_path.replace("s3://", "")
-        ) as f:
-            try:
-                self._df = read_file_func(f, schema=self._arrow_schema)
-            except Exception as e:
-                _logger.info(
-                    f"there was an error reading in the source data at "
-                    f"\"{self.data_path}\""
-                )
-                raise e
-
+    def _read_data_into_memory(self):
+        m = self._table_metadata if self._table_metadata else None
+        self._df = reader.read(self.data_path, metadata=m)
         self._df_sample = self._df.head(5)
 
     @property
