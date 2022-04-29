@@ -1,9 +1,11 @@
 # A set of useful functions for making and manipulating Athena databases
 
 ### Instalation and Requirments
-You must have python >= 3.8, all other requirements can be the `pyptoject.toml`.
-Currently, the package must be installed from GitHub, this can be done with the following command:
-`pip install git+https://github.com/moj-analytical-services/AthenaTools.git`
+You must have python >= 3.8, all other requirements can be found in the `pyptoject.toml`.
+The package is available on PyPi:
+`pip install athena_tools`
+you may need to use the `--user` flag if you're having permission issues:
+`pip install athena_tools --user`
 
 ## Creating a single table
 
